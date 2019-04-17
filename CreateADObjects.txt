@@ -1,0 +1,6 @@
+$list = Import-Csv .\NewHires.csv
+foreach ($item in $list) {
+$upn = $item.SamAccountName + "@gatesfoundation.org"
+new-aduser -Name $item.SamAccountName -UserPrincipalName $upn -DisplayName $item.SamAccountName -Path "OU=Test Users,
+OU=General Users,DC=seattle,dc=main,dc=gatesfoundation,dc=org" -PasswordNotRequired $true
+}
