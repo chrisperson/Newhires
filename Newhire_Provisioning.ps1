@@ -52,7 +52,7 @@ foreach ($item in $UserImport) {
 
 #Check each user in the list for unique email address and sip address
 foreach ($User in $ADUserList) {
-	If (($Null -eq (get-recipient $User.UserPrincipalName -erroraction SilentlyContinue)) -and ($Null -eq (get-csuser $User.UserPrincipalName -erroraction SilentlyContinue))) {
+	If ((!(get-recipient $User.UserPrincipalName -erroraction SilentlyContinue)) -and (!(get-csuser $User.UserPrincipalName -erroraction SilentlyContinue))) {
 		$UsersToProvision += $User
 	}
 	Else {
