@@ -39,7 +39,7 @@ $EVListFile = (get-date -format yyyyMMddhhmmss) + "_AssignNumbers.csv"
 $NoEVListFile = (get-date -format yyyyMMddhhmmss) + "_NoEnterpriseVoice.csv"
 $SkipFile = (get-date -format yyyyMMddhhmmss) + "_SkippedUsers.csv"
 $NewHireCopy = (get-date -format yyyyMMddhhmmss) + "_NewHires.csv"
-$RoutingDomain = "@bmgf.mail.gatesfoundation.org"
+$RoutingDomain = "@bmgf.mail.onmicrosoft.com"
 
 #Create AD User list for each object in csv and appent Office Location from CSV.
 #Insert UserImport variable saftey checks...
