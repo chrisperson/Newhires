@@ -1,6 +1,6 @@
 #Connect to Exchange and Skype Remote PS
 $UserCredential = Get-Credential
-$ExSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://emsmbx01.seattle.main.gatesfoundation.org/PowerShell/ -Authentication Kerberos -Credential $UserCredential
+$ExSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://emsmbxv01.seattle.main.gatesfoundation.org/PowerShell/ -Authentication Kerberos -Credential $UserCredential
 $SfBSession = New-PSSession -ConnectionUri https://seas4bfe01.seattle.main.gatesfoundation.org/OCSPowerShell -Credential $UserCredential
 
 #Check if connection to Exchange On-Premises is working
@@ -52,7 +52,7 @@ foreach ($item in $UserImport) {
 
 #Check each user in the list for unique email address and sip address
 foreach ($User in $ADUserList) {
-	If (((get-recipient $User.UserPrincipalName -erroraction SilentlyContinue) -eq $Null) -and ((get-csuser $User.UserPrincipalName -erroraction SilentlyContinue) -eq $Null)) {
+	If (($Null -eq (get-recipient $User.UserPrincipalName -erroraction SilentlyContinue)) -and ($Null -eq (get-csuser $User.UserPrincipalName -erroraction SilentlyContinue))) {
 		$UsersToProvision += $User
 	}
 	Else {
@@ -62,7 +62,7 @@ foreach ($User in $ADUserList) {
 
 #Consider making this a function - consider manual run unless specified in call
 
-If ($UsersToProvision -ne $null) {
+If ($UsersToProvision) {
 	Write-Host "Woud you like to provision the following Mailboxes and Skype for Business Accounts" -foregroundcolor Yellow
 
 	Foreach ($User in $UsersToProvision) {
@@ -133,9 +133,7 @@ Function Enable-BMGFAccount {
 
 
 # Configure Pool/Office Specific Settings for Skype
-Function Configure-BMGFAccountPolicies {
-$AssignPhoneNumbers = @()
-$NoEnterpriseVoice = @()
+Function Set-BMGFAccountPolicies {
 	Foreach ($User in $UsersToProvision) {
 		Switch ($User.UserOffice) {
 			"SEA" {
@@ -181,11 +179,10 @@ Enable-BMGFAccount
 ### Sleep for 15 seconds for Skype/AD Replication
 start-sleep -s 15
 #Configure Policies for New Accounts
-Configure-BMGFAccountPolicies
+Set-BMGFAccountPolicies
 
-If ($UsersToSkip -ne $null) {
+If ($UsersToSkip) {
 	Write-Host "The following users have been skipped due to a non unique SMTP Address or SIP Address" -foregroundcolor Yellow
-
 	Foreach ($User in $UsersToSkip) {
 	Write-Host $User.UserOffice "," $User.DisplayName "," $User.SamAccountName "," $User.UserPrincipalName -foregroundcolor Yellow
 	}
@@ -201,15 +198,15 @@ else {
 	}
 }
 
-$UsersToSkip | Select UserOffice, DisplayName, SamAccountName,UserPrincipalName | export-csv .\logs\$SkipFile
+$UsersToSkip | Select-Object UserOffice, DisplayName, SamAccountName,UserPrincipalName | export-csv .\logs\$SkipFile
 Write-Host "Please enable the following users for Exchange UM, Intercall, and assign a Phone Number." -foregroundcolor Green
-$AssignPhoneNumbers | Select DisplayName, SipAddress, RegistrarPool
-$AssignPhoneNumbers | Select DisplayName, SipAddress, RegistrarPool | export-csv .\logs\$EVListFile
+$AssignPhoneNumbers | Select-Object DisplayName, SipAddress, RegistrarPool
+$AssignPhoneNumbers | Select-Object DisplayName, SipAddress, RegistrarPool | export-csv .\logs\$EVListFile
 Write-Host "Please enable the following users for Intercall." -foregroundcolor Yellow
-$NoEnterpriseVoice | Select DisplayName, SipAddress, RegistrarPool 
-$NoEnterpriseVoice | Select DisplayName, SipAddress, RegistrarPool | export-csv .\logs\$NoEVListFile
+$NoEnterpriseVoice | Select-Object DisplayName, SipAddress, RegistrarPool 
+$NoEnterpriseVoice | Select-Object DisplayName, SipAddress, RegistrarPool | export-csv .\logs\$NoEVListFile
 $UserImport | export-csv .\logs\$NewHireCopy
 
 #Clear NewHires.csv
-(Get-Content .\NewHires.csv |  Select -First 1) | Out-File .\NewHires.CSV
+(Get-Content .\NewHires.csv |  Select-Object -First 1) | Out-File .\NewHires.CSV
 #Submit Zendesk Ticket for Newhire/Phone Number Assignments.
